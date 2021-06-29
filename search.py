@@ -87,17 +87,131 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # return goal in the format of diections. 
+
+    #Check start goal
+    if problem.isGoalState(problem.getStartState()):
+        return []
+
+    # setup
+    visited = {}
+    stack = util.Stack()
+    path = {}
+    start = problem.getStartState()
+    result = []
+    goal = None
+
+    visited[start] = None
+    for state in problem.getSuccessors(start):
+        print(state)
+        stack.push(state)
+        path[state] = (start, None, None)
+
+    while not stack.isEmpty():
+        curr = stack.pop()
+        if problem.isGoalState(curr[0]):
+            goal = curr
+            break
+        if curr[0] in visited.keys():
+            continue
+
+        visited[curr[0]] = None
+        for state in problem.getSuccessors(curr[0]):
+            stack.push(state)
+            path[state] = curr 
+
+    while goal != (start,None,None):
+        result.append(goal[1])
+        goal = path[goal]
+
+    result.reverse()
+    return result        
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # return goal in the format of diections. 
+
+    #Check start goal
+    if problem.isGoalState(problem.getStartState()):
+        return []
+
+    # setup
+    visited = {}
+    queue = util.Queue()
+    path = {}
+    start = problem.getStartState()
+    visited[start] = None
+    result = []
+    goal = None
+
+    # init queue
+    for state in problem.getSuccessors(start):
+        path[state] = (start, None, None)
+        queue.push(state)
+
+    #loop queue
+    while not queue.isEmpty():
+        current = queue.pop()
+        # print(current)
+        if problem.isGoalState(current[0]):
+            goal = current
+            break
+        elif current[0] in visited.keys():
+            continue
+
+        visited[current[0]] = None
+        for state in problem.getSuccessors(current[0]):
+            path[state] = current
+            queue.push(state)
+
+    # load Path
+    while goal != (start, None, None):
+        result.append(goal[1])
+        goal = path[goal]
+
+    # print(result)
+    result.reverse()
+    return result
+    
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    visited = set()
+    pq = util.PriorityQueue()
+    path = {}
+    start = (problem.getStartState(), None, 0)
+    pq.update((start, 0), 0)
+    goal = None
+    checked = {start[0]: 0}
+    while not pq.isEmpty():
+        cur, totalCost = pq.pop()
+        if cur in visited:
+            continue
+
+        if problem.isGoalState(cur[0]):
+            goal = cur
+            break
+
+        visited.add(cur[0])
+
+        for state in problem.getSuccessors(cur[0]):
+            cost = state[2] + totalCost
+            if not (state[0] in visited or (state[0] in checked and cost > checked[state[0]])):
+                path[state] = cur
+                checked[state[0]] = cost
+                pq.update((state, cost), cost)
+
+    result = []
+    # load Path
+    while goal != start:
+        result.append(goal[1])
+        goal = path[goal]
+
+    # print(result)
+    result.reverse()
+    return result
 
 def nullHeuristic(state, problem=None):
     """
