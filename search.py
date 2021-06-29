@@ -86,6 +86,7 @@ def depthFirstSearch(problem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
+
     "*** YOUR CODE HERE ***"
     # return goal in the format of diections. 
 
@@ -94,89 +95,138 @@ def depthFirstSearch(problem):
         return []
 
     # setup
-    visited = {}
+    visited = set()
     stack = util.Stack()
     path = {}
-    start = problem.getStartState()
-    result = []
+    start = (problem.getStartState(), None, 0)
+    stack.push(start)
     goal = None
 
-    visited[start] = None
-    for state in problem.getSuccessors(start):
-        print(state)
-        stack.push(state)
-        path[state] = (start, None, None)
-
+    # Loop stack
     while not stack.isEmpty():
-        curr = stack.pop()
-        if problem.isGoalState(curr[0]):
-            goal = curr
-            break
-        if curr[0] in visited.keys():
+
+        cur = stack.pop()
+        if cur[0] in visited:
             continue
 
-        visited[curr[0]] = None
-        for state in problem.getSuccessors(curr[0]):
-            stack.push(state)
-            path[state] = curr 
+        if problem.isGoalState(cur[0]):
+            goal = cur
+            break
 
-    while goal != (start,None,None):
+        visited.add(cur[0])
+
+        # save all the state to path and push them into the stack
+        for state in problem.getSuccessors(cur[0]):
+            if not state[0] in visited:
+                path[state] = cur
+                stack.push(state)
+    # end stack loop
+
+
+    result = []
+    # load Path in reverse order
+    while goal != start:
         result.append(goal[1])
         goal = path[goal]
 
     result.reverse()
-    return result        
+    return result      
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    # return goal in the format of diections. 
-
-    #Check start goal
+    
+    "Same as DFS, use queuei instead of stack"
     if problem.isGoalState(problem.getStartState()):
         return []
 
-    # setup
-    visited = {}
+    visited = set()
     queue = util.Queue()
     path = {}
-    start = problem.getStartState()
-    visited[start] = None
-    result = []
+    start = (problem.getStartState(), None, 0)
+    queue.push(start)
     goal = None
-
-    # init queue
-    for state in problem.getSuccessors(start):
-        path[state] = (start, None, None)
-        queue.push(state)
-
-    #loop queue
     while not queue.isEmpty():
-        current = queue.pop()
-        # print(current)
-        if problem.isGoalState(current[0]):
-            goal = current
-            break
-        elif current[0] in visited.keys():
+        cur = queue.pop()
+        if cur[0] in visited:
             continue
 
-        visited[current[0]] = None
-        for state in problem.getSuccessors(current[0]):
-            path[state] = current
-            queue.push(state)
+        if problem.isGoalState(cur[0]):
+            goal = cur
+            break
 
-    # load Path
-    while goal != (start, None, None):
+        visited.add(cur[0])
+        for state in problem.getSuccessors(cur[0]):
+            if not state[0] in visited:
+                path[state] = cur
+                queue.push(state)
+
+    result = []
+    while goal != start:
         result.append(goal[1])
         goal = path[goal]
-
-    # print(result)
     result.reverse()
     return result
     
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
+    "*** YOUR CODE HERE ***"
+
+    "Use a Priority Queue"
+    visited = set()
+    pq = util.PriorityQueue()
+    path = {}
+    start = (problem.getStartState(), None, 0)
+
+    """
+    pq(a, b)
+    a: tuple contains a location and the cost of this path so far.
+    b: the cost of this path so far
+    """
+    pq.update((start, 0), 0)
+    goal = None
+    """
+    checked: a dict that keep tracks the lowest cost to get to every state.
+    """
+    checked = {start[0]: 0}
+
+    while not pq.isEmpty():
+        cur, totalCost = pq.pop()
+        if cur[0] in visited:
+            continue
+
+        if problem.isGoalState(cur[0]):
+            goal = cur
+            break
+
+        visited.add(cur[0])
+
+        for state in problem.getSuccessors(cur[0]):
+            cost = state[2] + totalCost
+            # if the state has not beening visited 
+            # and the cost is lower than the cost in checked
+            if not (state[0] in visited or (state[0] in checked and cost > checked[state[0]])):
+                path[state] = cur
+                checked[state[0]] = cost
+                pq.update((state, cost), cost)
+
+    result = []
+    while goal != start:
+        result.append(goal[1])
+        goal = path[goal]
+    result.reverse()
+    return result
+
+def nullHeuristic(state, problem=None):
+    """
+    A heuristic function estimates the cost from the current state to the nearest
+    goal in the provided SearchProblem.  This heuristic is trivial.
+    """
+    return 0
+
+def aStarSearch(problem, heuristic=nullHeuristic):
+    """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
     visited = set()
     pq = util.PriorityQueue()
@@ -201,7 +251,7 @@ def uniformCostSearch(problem):
             if not (state[0] in visited or (state[0] in checked and cost > checked[state[0]])):
                 path[state] = cur
                 checked[state[0]] = cost
-                pq.update((state, cost), cost)
+                pq.update((state, cost), cost + heuristic(state[0], problem))
 
     result = []
     # load Path
@@ -212,18 +262,6 @@ def uniformCostSearch(problem):
     # print(result)
     result.reverse()
     return result
-
-def nullHeuristic(state, problem=None):
-    """
-    A heuristic function estimates the cost from the current state to the nearest
-    goal in the provided SearchProblem.  This heuristic is trivial.
-    """
-    return 0
-
-def aStarSearch(problem, heuristic=nullHeuristic):
-    """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
 
 
 # Abbreviations
