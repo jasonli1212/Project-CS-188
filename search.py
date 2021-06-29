@@ -94,43 +94,27 @@ def depthFirstSearch(problem):
     if problem.isGoalState(problem.getStartState()):
         return []
 
-    # setup
-    visited = set()
-    stack = util.Stack()
-    path = {}
-    start = (problem.getStartState(), None, 0)
-    stack.push(start)
+    # Setup
+    visited = []
+    Stack = util.Stack()
     goal = None
+    start = (problem.getStartState(), None, 0)
+    Stack.push((start, []))
 
-    # Loop stack
-    while not stack.isEmpty():
-
-        cur = stack.pop()
+    while not Stack.isEmpty():
+        cur, path = Stack.pop()
         if cur[0] in visited:
             continue
 
         if problem.isGoalState(cur[0]):
-            goal = cur
-            break
-
-        visited.add(cur[0])
-
-        # save all the state to path and push them into the stack
+            return path
+        visited.append(cur[0])
         for state in problem.getSuccessors(cur[0]):
             if not state[0] in visited:
-                path[state] = cur
-                stack.push(state)
-    # end stack loop
-
-
-    result = []
-    # load Path in reverse order
-    while goal != start:
-        result.append(goal[1])
-        goal = path[goal]
-
-    result.reverse()
-    return result      
+                newPath = path + [state[1]]
+                Stack.push((state, newPath))
+    
+    return []     
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
@@ -140,33 +124,26 @@ def breadthFirstSearch(problem):
     if problem.isGoalState(problem.getStartState()):
         return []
 
-    visited = set()
+    visited = []
     queue = util.Queue()
-    path = {}
-    start = (problem.getStartState(), None, 0)
-    queue.push(start)
     goal = None
+    start = (problem.getStartState(), None, 0)
+    queue.push((start, []))
+
     while not queue.isEmpty():
-        cur = queue.pop()
+        cur, path = queue.pop()
         if cur[0] in visited:
             continue
 
         if problem.isGoalState(cur[0]):
-            goal = cur
-            break
-
-        visited.add(cur[0])
+            return path
+        visited.append(cur[0])
         for state in problem.getSuccessors(cur[0]):
             if not state[0] in visited:
-                path[state] = cur
-                queue.push(state)
-
-    result = []
-    while goal != start:
-        result.append(goal[1])
-        goal = path[goal]
-    result.reverse()
-    return result
+                newPath = path + [state[1]]
+                queue.push((state, newPath))
+    
+    return []
     
 
 def uniformCostSearch(problem):
@@ -174,49 +151,33 @@ def uniformCostSearch(problem):
     "*** YOUR CODE HERE ***"
 
     "Use a Priority Queue"
-    visited = set()
+    visited = []
     pq = util.PriorityQueue()
-    path = {}
     start = (problem.getStartState(), None, 0)
 
     """
     pq(a, b)
-    a: tuple contains a location and the cost of this path so far.
+    a: tuple contains a location and the cost of this path so far and the path.
     b: the cost of this path so far
     """
-    pq.update((start, 0), 0)
-    goal = None
-    """
-    checked: a dict that keep tracks the lowest cost to get to every state.
-    """
-    checked = {start[0]: 0}
+    pq.update((start, 0, []), 0)
 
     while not pq.isEmpty():
-        cur, totalCost = pq.pop()
+        cur, totalCost, path = pq.pop()
         if cur[0] in visited:
             continue
 
         if problem.isGoalState(cur[0]):
-            goal = cur
-            break
+            return path
 
-        visited.add(cur[0])
+        visited.append(cur[0])
 
         for state in problem.getSuccessors(cur[0]):
             cost = state[2] + totalCost
-            # if the state has not beening visited 
-            # and the cost is lower than the cost in checked
-            if not (state[0] in visited or (state[0] in checked and cost > checked[state[0]])):
-                path[state] = cur
-                checked[state[0]] = cost
-                pq.update((state, cost), cost)
-
-    result = []
-    while goal != start:
-        result.append(goal[1])
-        goal = path[goal]
-    result.reverse()
-    return result
+            newPath = path + [state[1]]
+            pq.update((state, cost, newPath), cost)
+    
+    return []
 
 def nullHeuristic(state, problem=None):
     """
@@ -228,40 +189,36 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    visited = set()
+    "Use a Priority Queue"
+    visited = []
     pq = util.PriorityQueue()
-    path = {}
     start = (problem.getStartState(), None, 0)
-    pq.update((start, 0), 0)
-    goal = None
-    checked = {start[0]: 0}
+
+    """
+    pq(a, b)
+    a: tuple contains a location and the cost of this path so far and the path.
+    b: the cost of this path so far
+    """
+    pq.update((start, 0, []), 0)
+
     while not pq.isEmpty():
-        cur, totalCost = pq.pop()
-        if cur in visited:
+        cur, totalCost, path = pq.pop()
+        if cur[0] in visited:
             continue
 
         if problem.isGoalState(cur[0]):
-            goal = cur
-            break
+            return path
 
-        visited.add(cur[0])
+        visited.append(cur[0])
 
         for state in problem.getSuccessors(cur[0]):
             cost = state[2] + totalCost
-            if not (state[0] in visited or (state[0] in checked and cost > checked[state[0]])):
-                path[state] = cur
-                checked[state[0]] = cost
-                pq.update((state, cost), cost + heuristic(state[0], problem))
-
-    result = []
-    # load Path
-    while goal != start:
-        result.append(goal[1])
-        goal = path[goal]
-
-    # print(result)
-    result.reverse()
-    return result
+            # if the state has not beening visited 
+            # and the cost is lower than the cost in checked
+            newPath = path + [state[1]]
+            pq.update((state, cost, newPath), cost + heuristic(state[0], problem))
+    
+    return []
 
 
 # Abbreviations
