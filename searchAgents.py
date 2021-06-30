@@ -331,11 +331,13 @@ class CornersProblem(search.SearchProblem):
 
             "*** YOUR CODE HERE ***"
             x,y = state[0]
-            visited = list(state[1])
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
+            visited = list(state[1])
             if not self.walls[nextx][nexty]:
                 nextState = (nextx, nexty)
+                if nextState in self.corners and not nextState in visited:
+                    visited.append(nextState)
                 successors.append(((nextState, visited), action, 1))
             
         self._expanded += 1 # DO NOT CHANGEs
@@ -368,11 +370,29 @@ def cornersHeuristic(state, problem):
     shortest path from the state to a goal of the problem; i.e.  it should be
     admissible (as well as consistent).
     """
+
+    # The idea is going to the closest unvisted corner first then next one. The cost is 
+    # the sum of the manhattan distance.
+
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    def manhattan(xy1, xy2):
+        return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
+
+    position = state[0] 
+    unvisited = []
+    for i in corners:
+        if not i in state[1]:
+            unvisited.append(i)
+    result = 0
+    while unvisited:
+        theOne = min(unvisited, key = lambda x : manhattan(x, position))
+        result += manhattan(position, theOne)
+        unvisited.remove(theOne)
+        position = theOne
+    return result # Default to trivial solution
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -464,9 +484,8 @@ def foodHeuristic(state, problem):
     Subsequent calls to this heuristic can access
     problem.heuristicInfo['wallCount']
     """
-    position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    util.raiseNotDefined()
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
