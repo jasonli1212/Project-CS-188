@@ -297,7 +297,7 @@ class CornersProblem(search.SearchProblem):
         "*** YOUR CODE HERE ***"
         # returns a tuple(a, b)
         # a: position
-        # b: visited coners
+        # b: visited corners
         return (self.startingPosition, [])
 
     def isGoalState(self, state):
@@ -305,8 +305,8 @@ class CornersProblem(search.SearchProblem):
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        if state[0] in self.corners and not state[0] in state[1]:
-                    state[1].append(state[0])
+        # visited all 4 corners
+
         return len(state[1]) == 4
 
     def getSuccessors(self, state):
@@ -336,6 +336,7 @@ class CornersProblem(search.SearchProblem):
             visited = list(state[1])
             if not self.walls[nextx][nexty]:
                 nextState = (nextx, nexty)
+                # Check if the nextState is a corner. If it is, add it to visited list
                 if nextState in self.corners and not nextState in visited:
                     visited.append(nextState)
                 successors.append(((nextState, visited), action, 1))
@@ -485,6 +486,15 @@ def foodHeuristic(state, problem):
     problem.heuristicInfo['wallCount']
     """
     "*** YOUR CODE HERE ***"
+    def manhattan(xy1, xy2):
+        return ( (xy1[0] - xy2[0]) ** 2 + (xy1[1] - xy2[1]) ** 2 ) ** 0.5
+
+    position, foodGrid = state
+    foods = foodGrid.asList()
+    if foods:
+        theOne = max(foods, key = lambda x : manhattan(x, position))
+        return manhattan(theOne, position)
+    return 0
     util.raiseNotDefined()
 
 class ClosestDotSearchAgent(SearchAgent):
