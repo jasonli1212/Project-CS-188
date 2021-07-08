@@ -104,7 +104,7 @@ class ReflexAgent(Agent):
                 if dist < minDistFood:
                     minDistFood = dist
             size = len(foods) if len(foods) == 0 else 1
-            return  220/minDistFood
+            return  200/minDistFood
 
         def scoreGhost(newPos, newGhostStates):
             minDistGhost = float('inf')
@@ -120,7 +120,7 @@ class ReflexAgent(Agent):
             
         # Find the closest ghost
 
-        value = scoreGhost(newPos, newGhostStates) + scoreFood(newPos, newFood) + 200*successorGameState.getScore()
+        value = scoreGhost(newPos, newGhostStates) + scoreFood(newPos, newFood) + successorGameState.getScore()
         return value
 
 def scoreEvaluationFunction(currentGameState):
@@ -182,7 +182,61 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        """
+        def max_value(state):
+            initialize v= -inf
+            for each successor of state:
+                v = max(v, min-value(successor))
+            return v
+        """
+
+        """
+        def min_value(state):
+            initialize v = +inf
+            for each successor of state:
+                v = min(v, max_value(successor))
+            return v
+        """
+
+        def max_value(state, agentIndex, depth):
+            # If we reach the end of the the tree
+            if state.isWin() or state.isLose() or depth == 0:
+                return (self.evaluationFunction(state), 0)
+
+            v = float('-inf')
+            bestAction = None
+            legalMoves = state.getLegalActions(0)
+            for action in legalMoves:
+                # this next agent is a ghost.
+                nextGameState = state.generateSuccessor(0, action)
+                score = min_value(nextGameState, 1, depth)
+                if score > v:
+                    v = score
+                    bestAction = action
+            return (v, bestAction)
+
+        def min_value(state, agentIndex, depth):
+            # If we reach the end of the the tree
+            if state.isWin() or state.isLose() or depth == 0:
+                return self.evaluationFunction(state)
+
+            v = float('inf')
+            legalMoves = state.getLegalActions(agentIndex)
+            for action in legalMoves:
+                nextAgent = agentIndex + 1
+                # if this next agent is a ghost.
+                nextGameState = state.generateSuccessor(agentIndex, action)
+                if nextAgent != state.getNumAgents(): 
+                    v = min(v, min_value(nextGameState, nextAgent, depth))
+                # if the next agent is pacman
+                # We reach the end of this state so we go to the next depth
+                else:
+                    v = min(v, max_value(nextGameState, 0, depth - 1)[0])
+            return v
+        
+        return max_value(gameState, 0, self.depth)[1]
+        
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
