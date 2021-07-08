@@ -67,14 +67,61 @@ class ReflexAgent(Agent):
         to create a masterful evaluation function.
         """
         # Useful information you can extract from a GameState (pacman.py)
+
         successorGameState = currentGameState.generatePacmanSuccessor(action)
         newPos = successorGameState.getPacmanPosition()
         newFood = successorGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        """
+        print("successorGameState")
+        print(type(successorGameState))
+        print("newPos")
+        print(type(newPos))
+        print("newFood")
+        print(type(newFood))
+        print("newGhostStates")
+        print(type(newGhostStates))
+        print("newScaredTimes")
+        print(type(newScaredTimes))
+        """
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+
+        """
+        1. The farther away the ghost the better
+        2. Distance to closer to food better.
+        3. If scaredTime > 0 we can turn the ghost time positive.
+        """
+
+        def scoreFood(newPos, newFood):
+            minDistFood = float('inf')
+            foods = newFood.asList()
+            totFoods = 0
+            for food in foods:
+                dist = manhattanDistance(newPos, food)
+                totFoods += dist
+                if dist < minDistFood:
+                    minDistFood = dist
+            size = len(foods) if len(foods) == 0 else 1
+            return  220/minDistFood
+
+        def scoreGhost(newPos, newGhostStates):
+            minDistGhost = float('inf')
+            for ghost in newGhostStates:
+                if ghost.scaredTimer == 0:
+                    ghostPos = ghost.getPosition()
+                    dist = manhattanDistance(newPos, ghostPos)
+                    if dist < minDistGhost:
+                        minDistGhost = dist
+            if minDistGhost == float('inf'):
+                return 0
+            return minDistGhost * 2
+            
+        # Find the closest ghost
+
+        value = scoreGhost(newPos, newGhostStates) + scoreFood(newPos, newFood) + 200*successorGameState.getScore()
+        return value
 
 def scoreEvaluationFunction(currentGameState):
     """
