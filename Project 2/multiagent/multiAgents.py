@@ -284,7 +284,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                     v = score
                     bestAction = action
                 if score > beta:
-                    return (v, action)
+                    return (v, bestAction)
                 alpha = max(alpha, v)
             return (v, bestAction)
 
@@ -327,6 +327,54 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
+
+        # Take the max value out of all the expecti nodes
+        def maxAgent(state, agentIndex, depth):
+            if state.isWin() or state.isLose() or depth == 0:
+                return self.evaluationFunction(state)
+
+            score = float('-inf')
+            for action in state.getLegalActions(0):
+                score = max(score, expectimax(state.generateSuccessor(0, action), 1, depth))
+            return score
+
+        # Sum the value of all outcomes and take the avg, seen the ghost are uniformly at random.
+        def expectimax(state, agentIndex, depth):
+            # If we reach the end of the the tree
+            if state.isWin() or state.isLose() or depth == 0:
+                return self.evaluationFunction(state)
+            
+
+            v = 0
+            legalMoves = state.getLegalActions(agentIndex)
+            nextAgent = agentIndex + 1
+
+            # if the next agent is pacman then we need to go next depth.
+            if nextAgent == state.getNumAgents():
+                nextAgent = 0
+                depth -= 1
+            for action in legalMoves:
+                nextGameState = state.generateSuccessor(agentIndex, action)
+
+                #Call maxer if it is pacman
+                if nextAgent == 0:
+                    v += maxAgent(nextGameState, nextAgent, depth)
+                else:
+                    v += expectimax(nextGameState, nextAgent, depth)
+
+            return v / len(legalMoves)
+
+        result = float("-inf")
+        bestAction = None
+        for action in gameState.getLegalActions(0):
+            # this next agent is a ghost.
+            nextGameState = gameState.generateSuccessor(0, action)
+            score =  expectimax(nextGameState, 1, self.depth)
+            if score > result:
+                result = score
+                bestAction = action
+        return bestAction
+
         util.raiseNotDefined()
 
 def betterEvaluationFunction(currentGameState):
