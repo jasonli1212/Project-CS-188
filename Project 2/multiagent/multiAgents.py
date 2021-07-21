@@ -104,7 +104,7 @@ class ReflexAgent(Agent):
                 if dist < minDistFood:
                     minDistFood = dist
             size = len(foods) if len(foods) == 0 else 1
-            return  220/minDistFood
+            return  minDistFood
 
         def scoreGhost(newPos, newGhostStates):
             minDistGhost = float('inf')
@@ -116,11 +116,11 @@ class ReflexAgent(Agent):
                         minDistGhost = dist
             if minDistGhost == float('inf'):
                 return 0
-            return minDistGhost * 2
+            return minDistGhost
             
         # Find the closest ghost
 
-        value = scoreGhost(newPos, newGhostStates) + scoreFood(newPos, newFood) + 1000*successorGameState.getScore()
+        value = scoreGhost(newPos, newGhostStates) + 100 / scoreFood(newPos, newFood) + 200*successorGameState.getScore()
         return value
 
 def scoreEvaluationFunction(currentGameState):
@@ -382,10 +382,47 @@ def betterEvaluationFunction(currentGameState):
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION: same as Q1
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    #successorGameState = currentGameState.generatePacmanSuccessor(action)
+    newPos = currentGameState.getPacmanPosition()
+    newFood = currentGameState.getFood()
+    newGhostStates = currentGameState.getGhostStates()
+    newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+
+    # distance to the closest foods.
+    def scoreFood(newPos, newFood):
+
+        foods = newFood.asList()
+        minFood = float("inf")
+        for food in foods:
+            minFood = min(minFood, manhattanDistance(newPos, food))
+        return  minFood
+
+    #Total distance from Ghost.
+    def scoreGhost(newPos, newGhostStates, newScaredTimes):
+        minGhost = float("inf")
+        for ghost in newGhostStates:
+            if ghost.scaredTimer == 0:
+                ghostPos = ghost.getPosition()
+                minGhost = min(minGhost, manhattanDistance(newPos, ghostPos))
+        if (minGhost == float("inf") or minGhost == 0):
+            return 1
+        return minGhost
+
+    #We need to kill the ghost to get more points, inorder to get to 1000.
+    def distToCapsules(newPos, capsules):
+        return 10000 * len(capsules)
+
+    value = 1/scoreFood(newPos, newFood)\
+     - 1/scoreGhost(newPos,newGhostStates,newScaredTimes)\
+      + currentGameState.getScore()\
+       - distToCapsules(newPos, currentGameState.getCapsules())\
+       + random.uniform(0, 0.2) # if  all diractions are the same.
+    return value
+
 
 # Abbreviation
 better = betterEvaluationFunction
